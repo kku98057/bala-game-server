@@ -74,3 +74,37 @@ export const getBalanceGame = async (
     next(error);
   }
 };
+export const getBalanceGames = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [games, total] = await Promise.all([
+      prisma.balanceGame.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          items: true,
+        },
+      }),
+      prisma.balanceGame.count(),
+    ]);
+
+    res.json({
+      payload: {
+        games,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        list: limit,
+      },
+    });
+  } catch (error) {
+    console.error("게임 목록 조회 실패:", error);
+    res.status(500).json({ error: "게임 목록을 불러오는데 실패했습니다." });
+  }
+};
