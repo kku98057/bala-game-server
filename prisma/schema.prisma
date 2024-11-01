@@ -12,6 +12,19 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model FinalChoice {
+  id            Int             @id @default(autoincrement())
+  balanceGameId Int
+  selectedItemId Int
+  createdAt     DateTime        @default(now())
+  balanceGame   BalanceGame     @relation(fields: [balanceGameId], references: [id])
+  selectedItem  BalanceGameItem @relation(fields: [selectedItemId], references: [id])  // Item -> BalanceGameItem으로 수정
+
+  @@index([balanceGameId])
+  @@index([selectedItemId])
+}
+
 model BalanceGame {
   id        Int               @id @default(autoincrement())
   title     String            @db.VarChar(20)
@@ -19,6 +32,7 @@ model BalanceGame {
   items     BalanceGameItem[]
   participantCount Int       @default(0) 
   createdAt DateTime         @default(now())
+  finalChoices  FinalChoice[]
 }
 
 model BalanceGameItem {
@@ -27,4 +41,5 @@ model BalanceGameItem {
   imageUrl      String      @db.VarChar(1000)
   balanceGame   BalanceGame @relation(fields: [balanceGameId], references: [id])
   balanceGameId Int
+    finalChoices  FinalChoice[]
 }
