@@ -23,7 +23,7 @@ model BalanceGame {
 model BalanceGameItem {
   id            Int         @id @default(autoincrement())
   name          String      @db.VarChar(20)
-  imageUrl      String
+  imageUrl      String      @db.VarChar(1000)
   balanceGame   BalanceGame @relation(fields: [balanceGameId], references: [id])
   balanceGameId Int
 }
