@@ -109,7 +109,12 @@ export const getBalanceGames = async (req: Request, res: Response) => {
           createdAt: "desc",
         },
         include: {
-          items: true,
+          items: {
+            take: 3,
+            orderBy: {
+              id: "asc",
+            },
+          },
         },
       }),
       prisma.balanceGame.count(),
