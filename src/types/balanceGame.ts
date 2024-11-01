@@ -1,3 +1,5 @@
+import { BalanceGame } from "@prisma/client";
+
 export interface BalanceGameItem {
   name: string;
   imageUrl: File;
@@ -29,5 +31,16 @@ export interface GetBalanceGameResponse {
       imageUrl: string;
       balanceGameId: number;
     }[];
+  };
+}
+export interface BalanceGamesResponse {
+  payload: {
+    games: (BalanceGame & {
+      items: BalanceGameItem[];
+    })[];
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    list: number;
   };
 }
