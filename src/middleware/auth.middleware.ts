@@ -17,9 +17,13 @@ export const authMiddleware = (
       return;
     }
 
-    const decoded = verify(token, process.env.JWT_SECRET || "");
-    req.user = decoded; // 디코딩된 사용자 정보를 요청 객체에 추가
+    const decoded = verify(token, process.env.JWT_SECRET || "") as {
+      id: string;
+      email: string;
+      nickname: string;
+    };
 
+    req.user = decoded;
     next();
   } catch (error) {
     res.status(401).json({

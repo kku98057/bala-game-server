@@ -188,7 +188,27 @@ export const getGameStatistics = async (
   try {
     const { id } = req.params;
     const gameId = parseInt(id);
-
+    // gameId가 유효한 숫자가 아닌 경우
+    if (isNaN(gameId)) {
+      res.status(400).json({
+        success: false,
+        message: "유효하지 않은 게임 ID입니다.",
+      });
+      return;
+    }
+    // 게임이 존재하는지 먼저 확인
+    const game = await prisma.balanceGame.findUnique({
+      where: {
+        id: gameId,
+      },
+    });
+    if (!game) {
+      res.status(404).json({
+        success: false,
+        message: "존재하지 않는 게임입니다.",
+      });
+      return;
+    }
     // 게임의 모든 선택지와 각각의 선택 수를 조회
     const itemsWithStats = await prisma.balanceGameItem.findMany({
       where: {

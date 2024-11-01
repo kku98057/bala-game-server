@@ -11,6 +11,7 @@ import {
 } from "../controllers/balanceGame.controller";
 import { upload } from "../config/s3.config";
 import { authMiddleware } from "../middleware/auth.middleware";
+import commentRouter from "./comment.routes";
 const router = express.Router();
 
 router.post("/create", authMiddleware, upload.array("image"), uploadGame);
@@ -20,4 +21,5 @@ router.get("/statistics/:id", getGameStatistics);
 router.post("/final-choice", recordFinalChoice); // 새로운 엔드포인트
 router.get("/:id", getBalanceGame);
 router.get("/", getBalanceGames);
+router.use("/comments", commentRouter);
 export default router;

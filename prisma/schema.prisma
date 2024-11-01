@@ -66,7 +66,7 @@ model BalanceGameItem {
 
 model Comment {
   id        Int      @id @default(autoincrement())
-  content   String
+  content   String   @db.Text  
   createdAt DateTime @default(now())
   
   // 어떤 게임의 댓글인지
