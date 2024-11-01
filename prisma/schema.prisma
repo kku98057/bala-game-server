@@ -14,15 +14,15 @@ datasource db {
 }
 model BalanceGame {
   id        Int               @id @default(autoincrement())
-  title     String
-  username  String
+  title     String            @db.VarChar(20)
+  username  String            @db.VarChar(8)
   items     BalanceGameItem[]
   createdAt DateTime         @default(now())
 }
 
 model BalanceGameItem {
   id            Int         @id @default(autoincrement())
-  name          String
+  name          String      @db.VarChar(20)
   imageUrl      String
   balanceGame   BalanceGame @relation(fields: [balanceGameId], references: [id])
   balanceGameId Int
