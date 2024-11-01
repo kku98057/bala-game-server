@@ -12,6 +12,25 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+enum Provider {
+  EMAIL
+  KAKAO
+  GOOGLE
+  NAVER
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String?   // 소셜 로그인의 경우 비밀번호가 없을 수 있음
+  nickname  String    @unique
+  provider  Provider  @default(EMAIL) // 로그인 제공자 (이메일, 카카오 등)
+  socialId  String?   // 소셜 로그인의 경우 제공되는 고유 ID
+  createdAt DateTime  @default(now())
+  comments  Comment[]
+
+  @@index([email])
+}
 
 model FinalChoice {
   id            Int             @id @default(autoincrement())
@@ -33,6 +52,7 @@ model BalanceGame {
   participantCount Int       @default(0) 
   createdAt DateTime         @default(now())
   finalChoices  FinalChoice[]
+  comments  Comment[]
 }
 
 model BalanceGameItem {
@@ -42,4 +62,21 @@ model BalanceGameItem {
   balanceGame   BalanceGame @relation(fields: [balanceGameId], references: [id])
   balanceGameId Int
     finalChoices  FinalChoice[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  
+  // 어떤 게임의 댓글인지
+  gameId    Int
+  game      BalanceGame @relation(fields: [gameId], references: [id])
+  
+  // 어떤 사용자가 작성했는지
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([gameId]) // 게임별 댓글 조회 성능 향상
+  @@index([userId]) // 사용자별 댓글 조회 성능 향상
 }

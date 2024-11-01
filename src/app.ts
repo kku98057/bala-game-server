@@ -1,13 +1,14 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import balanceGameRoutes from "./routes/balaceGame.routes";
 import express, { Express, Request, Response } from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors.config";
 import { morganLogger, requestLogger } from "../middleware/logger";
 import compression from "compression";
 import helmet from "helmet";
+import authRoutes from "./routes/auth.routes";
+import balanceGameRoutes from "./routes/balaceGame.routes";
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
@@ -51,6 +52,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 라우트 설정
+app.use("/api/auth", authRoutes);
 app.use("/api/balanceGame", balanceGameRoutes);
 
 // 서버 시작
