@@ -23,6 +23,7 @@ export const createComment = async (req: Request, res: Response) => {
       });
       return;
     }
+
     // 댓글 길이 제한 (예: 300자)
     if (content.length > 300) {
       res.status(400).json({
