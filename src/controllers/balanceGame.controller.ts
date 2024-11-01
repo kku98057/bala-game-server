@@ -115,14 +115,22 @@ export const getBalanceGames = async (req: Request, res: Response) => {
               id: "asc",
             },
           },
+          _count: {
+            select: { items: true },
+          },
         },
       }),
       prisma.balanceGame.count(),
     ]);
-
+    // 응답 데이터에 itemsCount 추가
+    const gamesWithCount = games.map((game) => ({
+      ...game,
+      itemsCount: game._count.items, // 전체 선택지 수
+      _count: undefined, // _count 필드 제거
+    }));
     res.json({
       payload: {
-        games,
+        games: gamesWithCount,
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalItems: total,
