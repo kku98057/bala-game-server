@@ -157,3 +157,18 @@ export const login = async (
     });
   }
 };
+export const logout = async (req: Request, res: Response) => {
+  try {
+    // 여기서 필요한 경우 토큰 블랙리스트 처리 등을 할 수 있습니다
+    res.status(200).json({
+      success: true,
+      message: "로그아웃 되었습니다.",
+    });
+  } catch (error) {
+    console.error("로그아웃 컨트롤러 에러:", error);
+    res.status(500).json({
+      success: false,
+      message: "서버 오류가 발생했습니다.",
+    });
+  }
+};

@@ -4,7 +4,7 @@ dotenv.config();
 import express, { Express, Request, Response } from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors.config";
-import { morganLogger, requestLogger } from "../middleware/logger";
+import { morganLogger, requestLogger } from "./middleware/logger";
 import compression from "compression";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.routes";

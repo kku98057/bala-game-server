@@ -10,9 +10,10 @@ import {
   uploadGame,
 } from "../controllers/balanceGame.controller";
 import { upload } from "../config/s3.config";
+import { authMiddleware } from "../middleware/auth.middleware";
 const router = express.Router();
 
-router.post("/create", upload.array("image"), uploadGame);
+router.post("/create", authMiddleware, upload.array("image"), uploadGame);
 router.post("/participants", incrementParticipants);
 router.get("/statistics/:id", getGameStatistics);
 
