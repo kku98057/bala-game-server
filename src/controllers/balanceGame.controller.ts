@@ -151,11 +151,12 @@ export const incrementParticipants = async (
   next: NextFunction
 ) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body;
     const gameId = parseInt(id);
 
     if (isNaN(gameId)) {
-      return res.status(400).json({ message: "유효하지 않은 게임 ID입니다." });
+      res.status(400).json({ message: "유효하지 않은 게임 ID입니다." });
+      return;
     }
 
     const updatedGame = await prisma.balanceGame.update({
