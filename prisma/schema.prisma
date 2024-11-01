@@ -17,6 +17,7 @@ model BalanceGame {
   title     String            @db.VarChar(20)
   username  String            @db.VarChar(8)
   items     BalanceGameItem[]
+  participantCount Int       @default(0) 
   createdAt DateTime         @default(now())
 }
 

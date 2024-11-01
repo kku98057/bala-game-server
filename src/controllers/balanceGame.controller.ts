@@ -9,6 +9,7 @@ export const uploadGame = async (
   res: Response,
   next: NextFunction
 ) => {
+  // 게임 생성
   try {
     const balanceGameData: CreateBalanceGameRequest = req.body;
     const files = req.files as Express.MulterS3.File[]; // 타입 변경
@@ -65,6 +66,7 @@ export const getBalanceGame = async (
   res: Response,
   next: NextFunction
 ) => {
+  // 게임 상세
   try {
     const { id } = req.params;
     const gameId = parseInt(id);
@@ -96,6 +98,7 @@ export const getBalanceGame = async (
   }
 };
 export const getBalanceGames = async (req: Request, res: Response) => {
+  // 게임 리스트 조회
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
@@ -125,8 +128,8 @@ export const getBalanceGames = async (req: Request, res: Response) => {
     // 응답 데이터에 itemsCount 추가
     const gamesWithCount = games.map((game) => ({
       ...game,
-      itemsCount: game._count.items, // 전체 선택지 수
-      _count: undefined, // _count 필드 제거
+      itemsCount: game._count.items,
+      _count: undefined,
     }));
     res.json({
       payload: {
@@ -140,5 +143,36 @@ export const getBalanceGames = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("게임 목록 조회 실패:", error);
     res.status(500).json({ error: "게임 목록을 불러오는데 실패했습니다." });
+  }
+};
+export const incrementParticipants = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const gameId = parseInt(id);
+
+    if (isNaN(gameId)) {
+      return res.status(400).json({ message: "유효하지 않은 게임 ID입니다." });
+    }
+
+    const updatedGame = await prisma.balanceGame.update({
+      where: { id: gameId },
+      data: {
+        participantCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    res.status(200).json({
+      message: "참여자 수가 증가되었습니다.",
+      participantCount: updatedGame.participantCount,
+    });
+  } catch (error) {
+    console.error("참여자 수 증가 실패:", error);
+    next(error);
   }
 };
