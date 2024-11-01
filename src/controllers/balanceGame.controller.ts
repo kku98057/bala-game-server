@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { CreateBalanceGameRequest } from "../types/balanceGame";
 import prisma from "../lib/prisma";
-import { Prisma } from "@prisma/client";
-import exp from "constants";
 
+// 게임 생성
 export const uploadGame = async (
   req: Request,
   res: Response,
@@ -60,6 +59,7 @@ export const uploadGame = async (
   }
 };
 
+// 게임 상세
 export const getBalanceGame = async (
   req: Request,
   res: Response,
@@ -95,6 +95,8 @@ export const getBalanceGame = async (
     next(error);
   }
 };
+
+// 게임 리스트 조회
 export const getBalanceGames = async (req: Request, res: Response) => {
   try {
     const page = Number(req.query.page) || 1;
@@ -109,15 +111,28 @@ export const getBalanceGames = async (req: Request, res: Response) => {
           createdAt: "desc",
         },
         include: {
-          items: true,
+          items: {
+            take: 3,
+            orderBy: {
+              id: "asc",
+            },
+          },
+          _count: {
+            select: { items: true },
+          },
         },
       }),
       prisma.balanceGame.count(),
     ]);
-
+    // 응답 데이터에 itemsCount 추가
+    const gamesWithCount = games.map((game) => ({
+      ...game,
+      itemsCount: game._count.items,
+      _count: undefined,
+    }));
     res.json({
       payload: {
-        games,
+        games: gamesWithCount,
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalItems: total,
@@ -127,5 +142,154 @@ export const getBalanceGames = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("게임 목록 조회 실패:", error);
     res.status(500).json({ error: "게임 목록을 불러오는데 실패했습니다." });
+  }
+};
+
+// 참가자 수 증가
+export const incrementParticipants = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.body;
+    const gameId = parseInt(id);
+
+    if (isNaN(gameId)) {
+      res.status(400).json({ message: "유효하지 않은 게임 ID입니다." });
+      return;
+    }
+
+    const updatedGame = await prisma.balanceGame.update({
+      where: { id: gameId },
+      data: {
+        participantCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    res.status(200).json({
+      message: "참여자 수가 증가되었습니다.",
+      participantCount: updatedGame.participantCount,
+    });
+  } catch (error) {
+    console.error("참여자 수 증가 실패:", error);
+    next(error);
+  }
+};
+
+// 게임 통계
+export const getGameStatistics = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const gameId = parseInt(id);
+    // gameId가 유효한 숫자가 아닌 경우
+    if (isNaN(gameId)) {
+      res.status(400).json({
+        success: false,
+        message: "유효하지 않은 게임 ID입니다.",
+      });
+      return;
+    }
+    // 게임이 존재하는지 먼저 확인
+    const game = await prisma.balanceGame.findUnique({
+      where: {
+        id: gameId,
+      },
+    });
+    if (!game) {
+      res.status(404).json({
+        success: false,
+        message: "존재하지 않는 게임입니다.",
+      });
+      return;
+    }
+    // 게임의 모든 선택지와 각각의 선택 수를 조회
+    const itemsWithStats = await prisma.balanceGameItem.findMany({
+      where: {
+        balanceGameId: gameId,
+      },
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+        _count: {
+          select: {
+            finalChoices: true,
+          },
+        },
+      },
+    });
+
+    // 전체 선택 수 계산
+    const totalCount = itemsWithStats.reduce(
+      (sum, item) => sum + item._count.finalChoices,
+      0
+    );
+
+    // 응답 데이터 구조화
+    const statistics = itemsWithStats
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        imageUrl: item.imageUrl,
+        count: item._count.finalChoices,
+        percentage:
+          totalCount > 0
+            ? Math.round((item._count.finalChoices / totalCount) * 100)
+            : 0,
+      }))
+      .sort((a, b) => b.percentage - a.percentage);
+
+    res.status(200).json({
+      message: "통계 조회 성공",
+      data: {
+        totalCount,
+        items: statistics,
+      },
+    });
+  } catch (error) {
+    console.error("통계 조회 실패:", error);
+    next(error);
+  }
+};
+
+// 결승 선택 기록
+export const recordFinalChoice = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { balanceGameId, selectedItemId } = req.body;
+
+    // 유효성 검사
+    if (!balanceGameId || !selectedItemId) {
+      res.status(400).json({
+        message: "필수 데이터가 누락되었습니다.",
+      });
+      return;
+    }
+
+    // 최종 선택 기록
+    const finalChoice = await prisma.finalChoice.create({
+      data: {
+        balanceGameId: parseInt(balanceGameId),
+        selectedItemId: parseInt(selectedItemId),
+      },
+    });
+
+    res.status(201).json({
+      message: "최종 선택이 기록되었습니다.",
+      data: finalChoice,
+    });
+  } catch (error) {
+    console.error("최종 선택 기록 실패:", error);
+    next(error);
   }
 };
