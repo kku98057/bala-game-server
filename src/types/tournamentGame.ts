@@ -1,24 +1,24 @@
-import { BalanceGame } from "@prisma/client";
+import { TournamentGame } from "@prisma/client";
 
-export interface BalanceGameItem {
+export interface TournamentGameItem {
   name: string;
   imageUrl: File;
 }
 
-export interface CreateBalanceGameRequest {
+export interface CreateTournamentGameRequest {
   title: string;
-  list: BalanceGameItem[];
+  list: TournamentGameItem[];
   username: string;
 }
 
-export interface BalanceGameResponse {
+export interface TournamentResponse {
   id: number; // 서버에서 생성된 ID
   title: string;
-  list: BalanceGameItem[];
+  list: TournamentGameItem[];
   username: string;
   createdAt: Date; // 서버에서 생성된 시간
 }
-export interface GetBalanceGameResponse {
+export interface GetTournamentResponse {
   message: string;
   data: {
     id: number;
@@ -33,10 +33,10 @@ export interface GetBalanceGameResponse {
     }[];
   };
 }
-export interface BalanceGamesResponse {
+export interface TournamentGamesResponse {
   payload: {
-    games: (BalanceGame & {
-      items: BalanceGameItem[];
+    games: (TournamentGame & {
+      items: TournamentGameItem[];
     })[];
     currentPage: number;
     totalPages: number;
