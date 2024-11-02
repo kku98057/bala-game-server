@@ -10,7 +10,7 @@ dotenv.config({
 });
 
 // DATABASE_URL 구성
-const DATABASE_URL = `mysql://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:3306/${process.env.DB_DATABASE}`;
+const DATABASE_URL = process.env.DATABASE_URL;
 
 export const env = {
   DATABASE_URL,
