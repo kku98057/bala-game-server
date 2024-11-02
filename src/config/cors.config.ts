@@ -1,7 +1,7 @@
 import { CorsOptions } from "cors";
 
 export const corsOptions: CorsOptions = {
-  origin: "http://localhost:3000",
+  origin: "https://balansome.co.kr",
   credentials: true,
   optionsSuccessStatus: 200,
 };
