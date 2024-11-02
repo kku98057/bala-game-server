@@ -18,7 +18,10 @@ enum Provider {
   GOOGLE
   NAVER
 }
-
+enum GameType {
+  BALANCE
+  TOURNAMENT
+}
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -34,33 +37,33 @@ model User {
 
 model FinalChoice {
   id            Int             @id @default(autoincrement())
-  balanceGameId Int
+  tournamentId Int
   selectedItemId Int
   createdAt     DateTime        @default(now())
-  balanceGame   BalanceGame     @relation(fields: [balanceGameId], references: [id])
-  selectedItem  BalanceGameItem @relation(fields: [selectedItemId], references: [id])  // Item -> BalanceGameItem으로 수정
+  tournament   TournamentGame     @relation(fields: [tournamentId], references: [id])
+  selectedItem  TournamentItem @relation(fields: [selectedItemId], references: [id])  // Item -> TournamentItem으로 수정
 
-  @@index([balanceGameId])
+  @@index([tournamentId])
   @@index([selectedItemId])
 }
 
-model BalanceGame {
+model TournamentGame {
   id        Int               @id @default(autoincrement())
   title     String            @db.VarChar(20)
   username  String            @db.VarChar(8)
-  items     BalanceGameItem[]
+  items     TournamentItem[]
   participantCount Int       @default(0) 
   createdAt DateTime         @default(now())
   finalChoices  FinalChoice[]
   comments  Comment[]
 }
 
-model BalanceGameItem {
+model TournamentItem {
   id            Int         @id @default(autoincrement())
   name          String      @db.VarChar(20)
   imageUrl      String      @db.VarChar(1000)
-  balanceGame   BalanceGame @relation(fields: [balanceGameId], references: [id])
-  balanceGameId Int
+  tournament   TournamentGame @relation(fields: [tournamentId], references: [id])
+  tournamentId Int
     finalChoices  FinalChoice[]
 }
 
@@ -71,7 +74,7 @@ model Comment {
   
   // 어떤 게임의 댓글인지
   gameId    Int
-  game      BalanceGame @relation(fields: [gameId], references: [id])
+  game      TournamentGame @relation(fields: [gameId], references: [id])
   
   // 어떤 사용자가 작성했는지
   userId    String

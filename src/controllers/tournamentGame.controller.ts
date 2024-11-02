@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { CreateBalanceGameRequest } from "../types/balanceGame";
+import { CreateTournamentGameRequest } from "../types/tournamentGame";
 import prisma from "../lib/prisma";
 
 // 게임 생성
@@ -9,21 +9,21 @@ export const uploadGame = async (
   next: NextFunction
 ) => {
   try {
-    const balanceGameData: CreateBalanceGameRequest = req.body;
+    const tournamentGameData: CreateTournamentGameRequest = req.body;
     const files = req.files as Express.MulterS3.File[]; // 타입 변경
     // 입력값 검증 추가
-    if (balanceGameData.title.length > 20) {
+    if (tournamentGameData.title.length > 20) {
       res
         .status(400)
         .json({ message: "게임 제목은 20자 이하로 입력해주세요." });
       return;
     }
-    if (balanceGameData.username.length > 8) {
+    if (tournamentGameData.username.length > 8) {
       res.status(400).json({ message: "작성자명은 8자 이하로 입력해주세요." });
       return;
     }
     // 각 아이템 이름 길이 검증 추가
-    const invalidItems = balanceGameData.list.find(
+    const invalidItems = tournamentGameData.list.find(
       (item) => item.name.length > 20
     );
     if (invalidItems) {
@@ -33,12 +33,12 @@ export const uploadGame = async (
       return;
     }
 
-    const savedGame = await prisma.balanceGame.create({
+    const savedGame = await prisma.tournamentGame.create({
       data: {
-        title: balanceGameData.title,
-        username: balanceGameData.username,
+        title: tournamentGameData.title,
+        username: tournamentGameData.username,
         items: {
-          create: balanceGameData.list.map((item, index) => ({
+          create: tournamentGameData.list.map((item, index) => ({
             name: item.name,
             imageUrl: files[index].location,
           })),
@@ -50,7 +50,7 @@ export const uploadGame = async (
     });
 
     res.status(201).json({
-      message: "밸런스 게임 생성에 성공했습니다.",
+      message: "토너먼트 게임 생성에 성공했습니다.",
       data: savedGame,
     });
   } catch (error) {
@@ -60,7 +60,7 @@ export const uploadGame = async (
 };
 
 // 게임 상세
-export const getBalanceGame = async (
+export const getTournamentGame = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -74,7 +74,7 @@ export const getBalanceGame = async (
       return;
     }
 
-    const game = await prisma.balanceGame.findUnique({
+    const game = await prisma.tournamentGame.findUnique({
       where: { id: gameId },
       include: {
         items: true, // 관련된 아이템들도 함께 조회
@@ -97,14 +97,14 @@ export const getBalanceGame = async (
 };
 
 // 게임 리스트 조회
-export const getBalanceGames = async (req: Request, res: Response) => {
+export const getTournamentGames = async (req: Request, res: Response) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     const [games, total] = await Promise.all([
-      prisma.balanceGame.findMany({
+      prisma.tournamentGame.findMany({
         skip,
         take: limit,
         orderBy: {
@@ -122,7 +122,7 @@ export const getBalanceGames = async (req: Request, res: Response) => {
           },
         },
       }),
-      prisma.balanceGame.count(),
+      prisma.tournamentGame.count(),
     ]);
     // 응답 데이터에 itemsCount 추가
     const gamesWithCount = games.map((game) => ({
@@ -160,7 +160,7 @@ export const incrementParticipants = async (
       return;
     }
 
-    const updatedGame = await prisma.balanceGame.update({
+    const updatedGame = await prisma.tournamentGame.update({
       where: { id: gameId },
       data: {
         participantCount: {
@@ -180,7 +180,7 @@ export const incrementParticipants = async (
 };
 
 // 게임 통계
-export const getGameStatistics = async (
+export const getTournamentStatistics = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -197,7 +197,7 @@ export const getGameStatistics = async (
       return;
     }
     // 게임이 존재하는지 먼저 확인
-    const game = await prisma.balanceGame.findUnique({
+    const game = await prisma.tournamentGame.findUnique({
       where: {
         id: gameId,
       },
@@ -210,9 +210,9 @@ export const getGameStatistics = async (
       return;
     }
     // 게임의 모든 선택지와 각각의 선택 수를 조회
-    const itemsWithStats = await prisma.balanceGameItem.findMany({
+    const itemsWithStats = await prisma.tournamentItem.findMany({
       where: {
-        balanceGameId: gameId,
+        tournamentId: gameId,
       },
       select: {
         id: true,
@@ -266,10 +266,10 @@ export const recordFinalChoice = async (
   next: NextFunction
 ) => {
   try {
-    const { balanceGameId, selectedItemId } = req.body;
+    const { tournamentId, selectedItemId } = req.body;
 
     // 유효성 검사
-    if (!balanceGameId || !selectedItemId) {
+    if (!tournamentId || !selectedItemId) {
       res.status(400).json({
         message: "필수 데이터가 누락되었습니다.",
       });
@@ -279,7 +279,7 @@ export const recordFinalChoice = async (
     // 최종 선택 기록
     const finalChoice = await prisma.finalChoice.create({
       data: {
-        balanceGameId: parseInt(balanceGameId),
+        tournamentId: parseInt(tournamentId),
         selectedItemId: parseInt(selectedItemId),
       },
     });
