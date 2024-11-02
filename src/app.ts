@@ -11,7 +11,7 @@ import authRoutes from "./routes/auth.routes";
 import balanceGameRoutes from "./routes/tournamentGame.routes";
 import commentRoutes from "./routes/comment.routes";
 const app: Express = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // 1. 보안 미들웨어
 app.use(
@@ -54,7 +54,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // 라우트 설정
 app.use("/api/auth", authRoutes);
-app.use("/api/tournamentGame", balanceGameRoutes);
+app.use("/api/tournament", balanceGameRoutes);
 app.use("/api/comments", commentRoutes);
 
 // 서버 시작
