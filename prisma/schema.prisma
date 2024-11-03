@@ -22,6 +22,11 @@ enum GameType {
   BALANCE
   TOURNAMENT
 }
+enum GameStatus {
+  ACTIVE
+  COMPLETED
+  DELETED
+}
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -31,7 +36,10 @@ model User {
   socialId  String?   // 소셜 로그인의 경우 제공되는 고유 ID
   createdAt DateTime  @default(now())
   comments  Comment[]
-
+  balanceGames BalanceGame[] 
+  balanceChoices   BalanceFinalChoice[]
+  finalChoices FinalChoice[]  
+  tournamentGames TournamentGame[] 
   @@index([email])
 }
 
@@ -42,44 +50,110 @@ model FinalChoice {
   createdAt     DateTime        @default(now())
   tournament   TournamentGame     @relation(fields: [tournamentId], references: [id])
   selectedItem  TournamentItem @relation(fields: [selectedItemId], references: [id])  // Item -> TournamentItem으로 수정
-
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
   @@index([tournamentId])
-  @@index([selectedItemId])
+  @@index([selectedItemId])  
+  @@index([userId])
 }
 
 model TournamentGame {
   id        Int               @id @default(autoincrement())
-  title     String            @db.VarChar(20)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
   username  String            @db.VarChar(8)
+  title     String            @db.VarChar(20)
   items     TournamentItem[]
   participantCount Int       @default(0) 
-  createdAt DateTime         @default(now())
   finalChoices  FinalChoice[]
   comments  Comment[]
+  status    GameStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+  endedAt   DateTime?
+   @@index([userId])
 }
 
 model TournamentItem {
   id            Int         @id @default(autoincrement())
   name          String      @db.VarChar(20)
   imageUrl      String      @db.VarChar(1000)
-  tournament   TournamentGame @relation(fields: [tournamentId], references: [id])
   tournamentId Int
-    finalChoices  FinalChoice[]
+  tournament   TournamentGame @relation(fields: [tournamentId], references: [id])
+  finalChoices  FinalChoice[]
 }
 
 model Comment {
   id        Int      @id @default(autoincrement())
+   // 어떤 사용자가 작성했는지
+  userId    String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   content   String   @db.Text  
   createdAt DateTime @default(now())
-  
+  gameType  GameType  @default(TOURNAMENT) 
+    // 각 게임 타입별로 별도의 ID 필드 사용
+  tournamentGameId Int?
+  balanceGameId    Int?
   // 어떤 게임의 댓글인지
-  gameId    Int
-  game      TournamentGame @relation(fields: [gameId], references: [id])
-  
-  // 어떤 사용자가 작성했는지
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  game         TournamentGame? @relation(fields: [tournamentGameId], references: [id], onDelete: Cascade)
+  balanceGame  BalanceGame?    @relation(fields: [balanceGameId], references: [id], onDelete: Cascade)
 
-  @@index([gameId]) // 게임별 댓글 조회 성능 향상
+  isDeleted  Boolean   @default(false)    // 소프트 삭제 플래그
+  deletedAt  DateTime? // 삭제된 시간
+   @@index([tournamentGameId])
+  @@index([balanceGameId]) // 게임별 댓글 조회 성능 향상
   @@index([userId]) // 사용자별 댓글 조회 성능 향상
+}
+
+model BalanceGame {
+  id        Int               @id @default(autoincrement())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  username  String           @db.VarChar(8)
+  title     String           @db.VarChar(20)
+  type      GameType         @default(BALANCE)
+  questions BalanceQuestion[]  // 질문지들 (최대 10개)
+  createdAt DateTime         @default(now())
+  comments  Comment[]
+  status    GameStatus @default(ACTIVE)
+  endedAt   DateTime?
+  @@index([userId])
+}
+
+model BalanceQuestion {
+  id        Int               @id @default(autoincrement())
+  title     String           @db.VarChar(50)  // 질문 내용
+  gameId    Int
+  game      BalanceGame      @relation(fields: [gameId], references: [id])
+  items     BalanceItem[]    // 선택지들 (2~5개)
+  finalChoices BalanceFinalChoice[]
+  participantCount Int       @default(0)
+  createdAt DateTime         @default(now())
+
+  @@index([gameId])
+}
+
+model BalanceItem {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(20)
+  selectCount   Int             @default(0)
+  questionId    Int
+  question      BalanceQuestion @relation(fields: [questionId], references: [id])
+  finalChoices  BalanceFinalChoice[]
+
+  @@index([questionId])
+}
+
+model BalanceFinalChoice {
+  id            Int         @id @default(autoincrement())
+  questionId    Int
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id])
+  selectedItemId Int
+  createdAt     DateTime    @default(now())
+  question      BalanceQuestion @relation(fields: [questionId], references: [id])
+  selectedItem   BalanceItem    @relation(fields: [selectedItemId], references: [id])
+
+  @@index([questionId])
+  @@index([selectedItemId])
+  @@index([userId])
 }
