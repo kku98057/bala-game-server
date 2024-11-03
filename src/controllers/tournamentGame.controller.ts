@@ -10,33 +10,22 @@ export const uploadGame = async (
 ) => {
   try {
     const tournamentGameData: CreateTournamentGameRequest = req.body;
-    const files = req.files as Express.MulterS3.File[]; // 타입 변경
-    // 입력값 검증 추가
-    if (tournamentGameData.title.length > 20) {
-      res
-        .status(400)
-        .json({ message: "게임 제목은 20자 이하로 입력해주세요." });
+    const files = req.files as Express.MulterS3.File[];
+    const userId = req.user?.id; // 로그인한 사용자의 ID
+
+    // userId가 없는 경우 처리
+    if (!userId) {
+      res.status(401).json({ message: "로그인이 필요합니다." });
       return;
     }
-    if (tournamentGameData.username.length > 8) {
-      res.status(400).json({ message: "작성자명은 8자 이하로 입력해주세요." });
-      return;
-    }
-    // 각 아이템 이름 길이 검증 추가
-    const invalidItems = tournamentGameData.list.find(
-      (item) => item.name.length > 20
-    );
-    if (invalidItems) {
-      res
-        .status(400)
-        .json({ message: "선택지 이름은 20자 이하로 입력해주세요." });
-      return;
-    }
+
+    // 입력값 검증...
 
     const savedGame = await prisma.tournamentGame.create({
       data: {
         title: tournamentGameData.title,
         username: tournamentGameData.username,
+        userId: userId, // 사용자 ID 추가
         items: {
           create: tournamentGameData.list.map((item, index) => ({
             name: item.name,
@@ -46,6 +35,7 @@ export const uploadGame = async (
       },
       include: {
         items: true,
+        user: true, // 필요한 경우 user 정보도 포함
       },
     });
 
@@ -250,6 +240,8 @@ export const getTournamentStatistics = async (
       message: "통계 조회 성공",
       data: {
         totalCount,
+        createdAt: game.createdAt,
+        username: game.username,
         items: statistics,
       },
     });

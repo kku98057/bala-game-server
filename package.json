@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon ./src/app.ts",
+    "dev": "cross-env NODE_ENV=development dotenv -e .env.development nodemon ./src/app.ts",
     "build": "tsc",
     "start": "cross-env NODE_ENV=production dotenv -e .env.production node dist/app.js"
   },

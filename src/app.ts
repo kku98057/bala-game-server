@@ -8,8 +8,9 @@ import { morganLogger, requestLogger } from "./middleware/logger";
 import compression from "compression";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.routes";
-import balanceGameRoutes from "./routes/tournamentGame.routes";
+import tournamentGameRoutes from "./routes/tournamentGame.routes";
 import commentRoutes from "./routes/comment.routes";
+import balanceGameRoutes from "./routes/balanceGame.routes";
 const app: Express = express();
 const port = process.env.PORT || 3001;
 
@@ -54,10 +55,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // 라우트 설정
 app.use("/api/auth", authRoutes);
-app.use("/api/tournamentGame", balanceGameRoutes);
+app.use("/api/tournamentGame", tournamentGameRoutes);
+app.use("/api/balanceGame", balanceGameRoutes);
 app.use("/api/comments", commentRoutes);
 
 // 서버 시작
 app.listen(port, async () => {
+  console.log(process.env.NODE_ENV);
   console.log(`서버가 포트 ${port}번에서 실행 중입니다.`);
 });

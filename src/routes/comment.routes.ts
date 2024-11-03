@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { createComment, getComments } from "../controllers/comment.controller";
+import {
+  createComment,
+  deleteComment,
+  getComments,
+  updateComment,
+} from "../controllers/comment.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = Router();
@@ -8,6 +13,7 @@ const router = Router();
 router.post("/create", authMiddleware, createComment);
 
 // 댓글 목록 조회 (인증 불필요)
-router.get("/:gameId", getComments);
-
+router.get("/:gameId/:gameType", getComments);
+router.put("/:commentId", authMiddleware, updateComment);
+router.delete("/:commentId", authMiddleware, deleteComment);
 export default router;
