@@ -54,7 +54,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // 라우트 설정
 app.use("/api/auth", authRoutes);
-app.use("/api/tournament", balanceGameRoutes);
+app.use("/api/tournamentGame", balanceGameRoutes);
 app.use("/api/comments", commentRoutes);
 
 // 서버 시작
