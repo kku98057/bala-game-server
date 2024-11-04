@@ -15,6 +15,23 @@ CREATE TABLE `User` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `PointHistory` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `userId` VARCHAR(191) NOT NULL,
+    `amount` INTEGER NOT NULL,
+    `reason` ENUM('GAME_PARTICIPATION', 'GAME_CREATION', 'ADMIN_ADJUSTMENT', 'EVENT_REWARD', 'REFUND', 'ITEM_PURCHASE', 'GIFT_SENT', 'POINT_EXCHANGE') NOT NULL,
+    `gameId` INTEGER NULL,
+    `gameType` ENUM('BALANCE', 'TOURNAMENT') NULL,
+    `description` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `PointHistory_userId_idx`(`userId`),
+    INDEX `PointHistory_createdAt_idx`(`createdAt`),
+    INDEX `PointHistory_reason_idx`(`reason`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `FinalChoice` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `tournamentId` INTEGER NOT NULL,
@@ -101,7 +118,7 @@ CREATE TABLE `BalanceQuestion` (
 -- CreateTable
 CREATE TABLE `BalanceItem` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(20) NOT NULL,
+    `name` VARCHAR(40) NOT NULL,
     `selectCount` INTEGER NOT NULL DEFAULT 0,
     `questionId` INTEGER NOT NULL,
 
@@ -124,19 +141,22 @@ CREATE TABLE `BalanceFinalChoice` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `FinalChoice` ADD CONSTRAINT `FinalChoice_tournamentId_fkey` FOREIGN KEY (`tournamentId`) REFERENCES `TournamentGame`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `PointHistory` ADD CONSTRAINT `PointHistory_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `FinalChoice` ADD CONSTRAINT `FinalChoice_selectedItemId_fkey` FOREIGN KEY (`selectedItemId`) REFERENCES `TournamentItem`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `FinalChoice` ADD CONSTRAINT `FinalChoice_tournamentId_fkey` FOREIGN KEY (`tournamentId`) REFERENCES `TournamentGame`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `FinalChoice` ADD CONSTRAINT `FinalChoice_selectedItemId_fkey` FOREIGN KEY (`selectedItemId`) REFERENCES `TournamentItem`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `FinalChoice` ADD CONSTRAINT `FinalChoice_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `TournamentGame` ADD CONSTRAINT `TournamentGame_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `TournamentGame` ADD CONSTRAINT `TournamentGame_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `TournamentItem` ADD CONSTRAINT `TournamentItem_tournamentId_fkey` FOREIGN KEY (`tournamentId`) REFERENCES `TournamentGame`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `TournamentItem` ADD CONSTRAINT `TournamentItem_tournamentId_fkey` FOREIGN KEY (`tournamentId`) REFERENCES `TournamentGame`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Comment` ADD CONSTRAINT `Comment_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
@@ -148,19 +168,19 @@ ALTER TABLE `Comment` ADD CONSTRAINT `Comment_tournamentGameId_fkey` FOREIGN KEY
 ALTER TABLE `Comment` ADD CONSTRAINT `Comment_balanceGameId_fkey` FOREIGN KEY (`balanceGameId`) REFERENCES `BalanceGame`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `BalanceGame` ADD CONSTRAINT `BalanceGame_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `BalanceGame` ADD CONSTRAINT `BalanceGame_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `BalanceQuestion` ADD CONSTRAINT `BalanceQuestion_gameId_fkey` FOREIGN KEY (`gameId`) REFERENCES `BalanceGame`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `BalanceQuestion` ADD CONSTRAINT `BalanceQuestion_gameId_fkey` FOREIGN KEY (`gameId`) REFERENCES `BalanceGame`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `BalanceItem` ADD CONSTRAINT `BalanceItem_questionId_fkey` FOREIGN KEY (`questionId`) REFERENCES `BalanceQuestion`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `BalanceItem` ADD CONSTRAINT `BalanceItem_questionId_fkey` FOREIGN KEY (`questionId`) REFERENCES `BalanceQuestion`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `BalanceFinalChoice` ADD CONSTRAINT `BalanceFinalChoice_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `BalanceFinalChoice` ADD CONSTRAINT `BalanceFinalChoice_questionId_fkey` FOREIGN KEY (`questionId`) REFERENCES `BalanceQuestion`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `BalanceFinalChoice` ADD CONSTRAINT `BalanceFinalChoice_questionId_fkey` FOREIGN KEY (`questionId`) REFERENCES `BalanceQuestion`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `BalanceFinalChoice` ADD CONSTRAINT `BalanceFinalChoice_selectedItemId_fkey` FOREIGN KEY (`selectedItemId`) REFERENCES `BalanceItem`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `BalanceFinalChoice` ADD CONSTRAINT `BalanceFinalChoice_selectedItemId_fkey` FOREIGN KEY (`selectedItemId`) REFERENCES `BalanceItem`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
