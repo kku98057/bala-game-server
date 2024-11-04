@@ -27,6 +27,19 @@ enum GameStatus {
   COMPLETED
   DELETED
 }
+enum PointReason {
+  // 포인트 획득 사유
+  GAME_PARTICIPATION  // 게임 참여로 인한 포인트 획득
+  GAME_CREATION      // 게임 생성으로 인한 포인트 획득
+  ADMIN_ADJUSTMENT   // 관리자 조정
+  EVENT_REWARD       // 이벤트 보상
+  REFUND            // 환불/취소로 인한 포인트 반환
+
+  // 포인트 사용 사유
+  ITEM_PURCHASE     // 아이템 구매
+  GIFT_SENT         // 선물하기
+  POINT_EXCHANGE    // 교환/환전
+}
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -40,16 +53,32 @@ model User {
   balanceChoices   BalanceFinalChoice[]
   finalChoices FinalChoice[]  
   tournamentGames TournamentGame[] 
+    pointHistory PointHistory[]
   @@index([email])
 }
+// 포인트 이력 모델 추가
+model PointHistory {
+  id        Int         @id @default(autoincrement())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int         // 변동된 포인트 양 (양수: 획득, 음수: 사용)
+  reason    PointReason // 모든 포인트 변동 사유를 하나의 enum으로 관리
+  gameId    Int?        // 게임 관련 포인트 변동시 사용
+  gameType  GameType?   // 게임 타입
+  description String?   // 추가 설명이 필요한 경우
+  createdAt DateTime    @default(now())
 
+  @@index([userId])
+  @@index([createdAt])
+  @@index([reason])    // 사유별 조회를 위한 인덱스 추가
+}
 model FinalChoice {
   id            Int             @id @default(autoincrement())
   tournamentId Int
   selectedItemId Int
   createdAt     DateTime        @default(now())
-  tournament   TournamentGame     @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // 추가
-  selectedItem  TournamentItem @relation(fields: [selectedItemId], references: [id], onDelete: Cascade) // 추가
+  tournament   TournamentGame   @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // 추가
+  selectedItem  TournamentItem  @relation(fields: [selectedItemId], references: [id], onDelete: Cascade) // 추가
   userId    String?
   user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull) // 추가
   @@index([tournamentId])
@@ -60,14 +89,14 @@ model FinalChoice {
 model TournamentGame {
   id        Int               @id @default(autoincrement())
   userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade) // 추가
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade) // 추가
   username  String            @db.VarChar(8)
   title     String            @db.VarChar(20)
   items     TournamentItem[]
-  participantCount Int       @default(0) 
+  participantCount Int        @default(0) 
   finalChoices  FinalChoice[]
   comments  Comment[]
-  status    GameStatus @default(ACTIVE)
+  status    GameStatus       @default(ACTIVE)
   createdAt DateTime         @default(now())
   endedAt   DateTime?
    @@index([userId])
@@ -83,12 +112,12 @@ model TournamentItem {
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
    // 어떤 사용자가 작성했는지
   userId    String?
   user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  content   String   @db.Text  
-  createdAt DateTime @default(now())
+  content   String       @db.Text  
+  createdAt DateTime    @default(now())
   gameType  GameType  @default(TOURNAMENT) 
     // 각 게임 타입별로 별도의 ID 필드 사용
   tournamentGameId Int?
@@ -114,21 +143,21 @@ model BalanceGame {
   questions BalanceQuestion[]  // 질문지들 (최대 10개)
   createdAt DateTime         @default(now())
   comments  Comment[]
-  status    GameStatus @default(ACTIVE)
+  status    GameStatus    @default(ACTIVE)
   endedAt   DateTime?
   @@index([userId])
 }
 
 model BalanceQuestion {
   id        Int               @id @default(autoincrement())
-  title     String           @db.VarChar(50)  // 질문 내용
+  title     String            @db.VarChar(50)  // 질문 내용
   gameId    Int
-  game      BalanceGame      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game      BalanceGame       @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   items     BalanceItem[]    // 선택지들 (2~5개)
   finalChoices BalanceFinalChoice[]
-  participantCount Int       @default(0)
-  createdAt DateTime         @default(now())
+  participantCount Int        @default(0)
+  createdAt DateTime          @default(now())
 
   @@index([gameId])
 }
@@ -145,14 +174,14 @@ model BalanceItem {
 }
 
 model BalanceFinalChoice {
-  id            Int         @id @default(autoincrement())
+  id            Int              @id @default(autoincrement())
   questionId    Int
   userId        String?
-  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull) // 추가
+  user          User?            @relation(fields: [userId], references: [id], onDelete: SetNull) // 추가
   selectedItemId Int
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime         @default(now())
    question      BalanceQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  selectedItem   BalanceItem    @relation(fields: [selectedItemId], references: [id], onDelete: Cascade)
+  selectedItem   BalanceItem     @relation(fields: [selectedItemId], references: [id], onDelete: Cascade)
 
   @@index([questionId])
   @@index([selectedItemId])
