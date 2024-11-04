@@ -7,6 +7,8 @@ CREATE TABLE `User` (
     `provider` ENUM('EMAIL', 'KAKAO', 'GOOGLE', 'NAVER') NOT NULL DEFAULT 'EMAIL',
     `socialId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `profileImageUrl` VARCHAR(191) NULL,
+    `phoneNumber` VARCHAR(191) NULL,
 
     UNIQUE INDEX `User_email_key`(`email`),
     UNIQUE INDEX `User_nickname_key`(`nickname`),
