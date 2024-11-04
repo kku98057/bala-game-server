@@ -48,10 +48,10 @@ model FinalChoice {
   tournamentId Int
   selectedItemId Int
   createdAt     DateTime        @default(now())
-  tournament   TournamentGame     @relation(fields: [tournamentId], references: [id])
-  selectedItem  TournamentItem @relation(fields: [selectedItemId], references: [id])  // Item -> TournamentItem으로 수정
+  tournament   TournamentGame     @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // 추가
+  selectedItem  TournamentItem @relation(fields: [selectedItemId], references: [id], onDelete: Cascade) // 추가
   userId    String?
-  user      User?     @relation(fields: [userId], references: [id])
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull) // 추가
   @@index([tournamentId])
   @@index([selectedItemId])  
   @@index([userId])
@@ -60,7 +60,7 @@ model FinalChoice {
 model TournamentGame {
   id        Int               @id @default(autoincrement())
   userId    String
-  user      User      @relation(fields: [userId], references: [id])
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade) // 추가
   username  String            @db.VarChar(8)
   title     String            @db.VarChar(20)
   items     TournamentItem[]
@@ -78,7 +78,7 @@ model TournamentItem {
   name          String      @db.VarChar(20)
   imageUrl      String      @db.VarChar(1000)
   tournamentId Int
-  tournament   TournamentGame @relation(fields: [tournamentId], references: [id])
+  tournament   TournamentGame @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // 추가
   finalChoices  FinalChoice[]
 }
 
@@ -107,7 +107,7 @@ model Comment {
 model BalanceGame {
   id        Int               @id @default(autoincrement())
   userId    String
-  user      User             @relation(fields: [userId], references: [id])
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade) // 추가
   username  String           @db.VarChar(8)
   title     String           @db.VarChar(20)
   type      GameType         @default(BALANCE)
@@ -123,7 +123,8 @@ model BalanceQuestion {
   id        Int               @id @default(autoincrement())
   title     String           @db.VarChar(50)  // 질문 내용
   gameId    Int
-  game      BalanceGame      @relation(fields: [gameId], references: [id])
+  game      BalanceGame      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
   items     BalanceItem[]    // 선택지들 (2~5개)
   finalChoices BalanceFinalChoice[]
   participantCount Int       @default(0)
@@ -137,7 +138,7 @@ model BalanceItem {
   name          String          @db.VarChar(40)
   selectCount   Int             @default(0)
   questionId    Int
-  question      BalanceQuestion @relation(fields: [questionId], references: [id])
+  question      BalanceQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
   finalChoices  BalanceFinalChoice[]
 
   @@index([questionId])
@@ -147,11 +148,11 @@ model BalanceFinalChoice {
   id            Int         @id @default(autoincrement())
   questionId    Int
   userId        String?
-  user          User?       @relation(fields: [userId], references: [id])
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull) // 추가
   selectedItemId Int
   createdAt     DateTime    @default(now())
-  question      BalanceQuestion @relation(fields: [questionId], references: [id])
-  selectedItem   BalanceItem    @relation(fields: [selectedItemId], references: [id])
+   question      BalanceQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedItem   BalanceItem    @relation(fields: [selectedItemId], references: [id], onDelete: Cascade)
 
   @@index([questionId])
   @@index([selectedItemId])
