@@ -7,7 +7,6 @@ export const createComment = async (req: Request, res: Response) => {
   try {
     const { gameId, content, gameType } = req.body;
     const userId = req.user?.id; // 미들웨어에서 설정한 user 정보
-    console.log(gameType);
     // gameType 검증 및 변환
 
     // userId가 없는 경우 처리

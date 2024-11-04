@@ -49,12 +49,12 @@ export const createBalanceGame = async (
 
     // 3. 각 질문과 선택지 유효성 검사
     for (const question of gameData.questions) {
-      if (!question.title || question.title.length > 50) {
-        res.status(400).json({
-          message: "질문은 1~50자로 입력해주세요.",
-        });
-        return;
-      }
+      // if (!question.title || question.title.length > 50) {
+      //   res.status(400).json({
+      //     message: "질문은 1~40자로 입력해주세요.",
+      //   });
+      //   return;
+      // }
 
       if (
         !question.items ||
@@ -68,9 +68,9 @@ export const createBalanceGame = async (
       }
 
       for (const item of question.items) {
-        if (!item.name || item.name.length > 20) {
+        if (!item.name || item.name.length > 40) {
           res.status(400).json({
-            message: "선택지는 1~20자로 입력해주세요.",
+            message: "선택지는 1~40자로 입력해주세요.",
           });
           return;
         }
@@ -443,7 +443,7 @@ export const getBalanceGameStats = async (
         return {
           id: question.id,
           title: question.title,
-          participantCount: question.participantCount,
+          participantCount: totalSelections, // participantCount를 totalSelections로 대체
           totalSelections,
           items: question.items.map((item) => ({
             id: item.id,
@@ -464,6 +464,57 @@ export const getBalanceGameStats = async (
     });
   } catch (error) {
     console.error("통계 조회 실패:", error);
+    next(error);
+  }
+};
+// ... existing code ...
+
+// 밸런스 게임 삭제
+export const deleteBalanceGame = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const gameId = Number(req.params.gameId);
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({
+        message: "인증이 필요합니다.",
+      });
+      return;
+    }
+
+    // 게임 존재 여부 및 작성자 확인
+    const game = await prisma.balanceGame.findUnique({
+      where: { id: gameId },
+    });
+
+    if (!game) {
+      res.status(404).json({
+        message: "게임을 찾을 수 없습니다.",
+      });
+      return;
+    }
+
+    if (game.userId !== userId) {
+      res.status(403).json({
+        message: "게임을 삭제할 권한이 없습니다.",
+      });
+      return;
+    }
+
+    // 게임 삭제 (연관된 데이터는 CASCADE로 자동 삭제)
+    await prisma.balanceGame.delete({
+      where: { id: gameId },
+    });
+
+    res.status(200).json({
+      message: "게임이 성공적으로 삭제되었습니다.",
+    });
+  } catch (error) {
+    console.error("게임 삭제 실패:", error);
     next(error);
   }
 };
