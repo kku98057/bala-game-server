@@ -49,12 +49,12 @@ export const createBalanceGame = async (
 
     // 3. 각 질문과 선택지 유효성 검사
     for (const question of gameData.questions) {
-      if (!question.title || question.title.length > 50) {
-        res.status(400).json({
-          message: "질문은 1~50자로 입력해주세요.",
-        });
-        return;
-      }
+      // if (!question.title || question.title.length > 50) {
+      //   res.status(400).json({
+      //     message: "질문은 1~40자로 입력해주세요.",
+      //   });
+      //   return;
+      // }
 
       if (
         !question.items ||
@@ -68,9 +68,9 @@ export const createBalanceGame = async (
       }
 
       for (const item of question.items) {
-        if (!item.name || item.name.length > 20) {
+        if (!item.name || item.name.length > 40) {
           res.status(400).json({
-            message: "선택지는 1~20자로 입력해주세요.",
+            message: "선택지는 1~40자로 입력해주세요.",
           });
           return;
         }

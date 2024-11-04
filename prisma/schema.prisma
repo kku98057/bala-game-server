@@ -134,7 +134,7 @@ model BalanceQuestion {
 
 model BalanceItem {
   id            Int             @id @default(autoincrement())
-  name          String          @db.VarChar(20)
+  name          String          @db.VarChar(40)
   selectCount   Int             @default(0)
   questionId    Int
   question      BalanceQuestion @relation(fields: [questionId], references: [id])
