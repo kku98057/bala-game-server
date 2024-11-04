@@ -48,12 +48,14 @@ model User {
   provider  Provider  @default(EMAIL) // 로그인 제공자 (이메일, 카카오 등)
   socialId  String?   // 소셜 로그인의 경우 제공되는 고유 ID
   createdAt DateTime  @default(now())
+  profileImageUrl String?
+  phoneNumber String?
   comments  Comment[]
   balanceGames BalanceGame[] 
   balanceChoices   BalanceFinalChoice[]
   finalChoices FinalChoice[]  
   tournamentGames TournamentGame[] 
-    pointHistory PointHistory[]
+  pointHistory PointHistory[]
   @@index([email])
 }
 // 포인트 이력 모델 추가
