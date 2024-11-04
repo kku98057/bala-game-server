@@ -500,7 +500,7 @@ export const deleteBalanceGame = async (
 
     if (game.userId !== userId) {
       res.status(403).json({
-        message: "게임 삭제 권한이 없습니다.",
+        message: "게임을 삭제할 권한이 없습니다.",
       });
       return;
     }
@@ -511,7 +511,7 @@ export const deleteBalanceGame = async (
     });
 
     res.status(200).json({
-      message: "게임이 삭제되었습니다.",
+      message: "게임이 성공적으로 삭제되었습니다.",
     });
   } catch (error) {
     console.error("게임 삭제 실패:", error);

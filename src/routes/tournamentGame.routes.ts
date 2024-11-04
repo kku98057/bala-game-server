@@ -1,6 +1,7 @@
 import express from "express";
 
 import {
+  deleteTournamentGame,
   getTournamentGame,
   getTournamentGames,
   getTournamentStatistics,
@@ -21,4 +22,5 @@ router.post("/final-choice", recordFinalChoice); // 새로운 엔드포인트
 router.get("/:id", getTournamentGame);
 router.get("/", getTournamentGames);
 router.use("/comments", commentRouter);
+router.delete("/:gameId", authMiddleware, deleteTournamentGame);
 export default router;

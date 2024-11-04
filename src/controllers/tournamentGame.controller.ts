@@ -285,3 +285,52 @@ export const recordFinalChoice = async (
     next(error);
   }
 };
+
+// 게임 삭제
+export const deleteTournamentGame = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const gameId = Number(req.params.gameId);
+    const userId = req.user?.id;
+
+    // 유효성 검사
+    if (isNaN(gameId)) {
+      res.status(400).json({ message: "유효하지 않은 게임 ID입니다." });
+      return;
+    }
+
+    if (!userId) {
+      res.status(401).json({ message: "인증이 필요합니다." });
+      return;
+    }
+
+    // 게임 존재 여부와 작성자 확인
+    const game = await prisma.tournamentGame.findUnique({
+      where: { id: gameId },
+      select: { userId: true },
+    });
+
+    if (!game) {
+      res.status(404).json({ message: "게임을 찾을 수 없습니다." });
+      return;
+    }
+
+    if (game.userId !== userId) {
+      res.status(403).json({ message: "게임을 삭제할 권한이 없습니다." });
+      return;
+    }
+
+    // 게임 삭제 (연관된 데이터는 CASCADE로 자동 삭제)
+    await prisma.tournamentGame.delete({
+      where: { id: gameId },
+    });
+
+    res.status(200).json({ message: "게임이 성공적으로 삭제되었습니다." });
+  } catch (error) {
+    console.error("게임 삭제 실패:", error);
+    next(error);
+  }
+};
