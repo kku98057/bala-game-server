@@ -443,7 +443,7 @@ export const getBalanceGameStats = async (
         return {
           id: question.id,
           title: question.title,
-          participantCount: question.participantCount,
+          participantCount: totalSelections, // participantCount를 totalSelections로 대체
           totalSelections,
           items: question.items.map((item) => ({
             id: item.id,
