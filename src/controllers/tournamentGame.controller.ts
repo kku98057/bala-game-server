@@ -40,7 +40,7 @@ export const uploadGame = async (
     });
 
     res.status(201).json({
-      message: "토너먼트 게임 생성에 성공했습니다.",
+      message: "월드컵 게임 생성에 성공했습니다.",
       data: savedGame,
     });
   } catch (error) {
