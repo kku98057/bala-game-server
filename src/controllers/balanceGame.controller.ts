@@ -467,8 +467,7 @@ export const getBalanceGameStats = async (
     next(error);
   }
 };
-// ... existing code ...
-
+// 삭제
 // 밸런스 게임 삭제
 export const deleteBalanceGame = async (
   req: Request,

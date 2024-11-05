@@ -239,6 +239,8 @@ export const getTournamentStatistics = async (
     res.status(200).json({
       message: "통계 조회 성공",
       data: {
+        id: game.id,
+        title: game.title,
         totalCount,
         createdAt: game.createdAt,
         username: game.username,
