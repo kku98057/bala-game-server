@@ -497,7 +497,7 @@ export const deleteBalanceGame = async (
       return;
     }
 
-    if (game.userId !== userId) {
+    if (game.userId !== userId && req.user?.role !== "SUPER_ADMIN") {
       res.status(403).json({
         message: "게임을 삭제할 권한이 없습니다.",
       });
