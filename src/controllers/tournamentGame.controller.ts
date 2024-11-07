@@ -108,7 +108,7 @@ export const getTournamentGames = async (req: Request, res: Response) => {
             },
           },
           _count: {
-            select: { items: true },
+            select: { items: true, comments: true },
           },
         },
       }),
@@ -119,6 +119,7 @@ export const getTournamentGames = async (req: Request, res: Response) => {
       ...game,
       itemsCount: game._count.items,
       _count: undefined,
+      commentsCount: game._count.comments,
     }));
     res.json({
       payload: {
@@ -261,6 +262,7 @@ export const recordFinalChoice = async (
 ) => {
   try {
     const { tournamentId, selectedItemId } = req.body;
+    const userId = req.user?.id; // 로그인한 경우에만 존재
 
     // 유효성 검사
     if (!tournamentId || !selectedItemId) {
@@ -269,18 +271,33 @@ export const recordFinalChoice = async (
       });
       return;
     }
-
-    // 최종 선택 기록
-    const finalChoice = await prisma.finalChoice.create({
-      data: {
-        tournamentId: parseInt(tournamentId),
-        selectedItemId: parseInt(selectedItemId),
-      },
-    });
+    // 트랜잭션으로 최종 선택 기록과 참가자 수 증가를 함께 처리
+    const [finalChoice, updatedGame] = await prisma.$transaction([
+      // 최종 선택 기록
+      prisma.finalChoice.create({
+        data: {
+          tournamentId: parseInt(tournamentId),
+          selectedItemId: parseInt(selectedItemId),
+          ...(userId && { userId }), // 로그인한 경우에만 userId 추가
+        },
+      }),
+      // 참가자 수 증가
+      prisma.tournamentGame.update({
+        where: { id: parseInt(tournamentId) },
+        data: {
+          participantCount: {
+            increment: 1,
+          },
+        },
+      }),
+    ]);
 
     res.status(201).json({
       message: "최종 선택이 기록되었습니다.",
-      data: finalChoice,
+      data: {
+        finalChoice,
+        participantCount: updatedGame.participantCount,
+      },
     });
   } catch (error) {
     console.error("최종 선택 기록 실패:", error);

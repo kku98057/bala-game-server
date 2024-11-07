@@ -68,6 +68,7 @@ model User {
   finalChoices    FinalChoice[]
   tournamentGames TournamentGame[]
   pointHistory    PointHistory[]
+   notices         Notice[]
 
   @@index([email])
   @@index([role])
@@ -208,4 +209,18 @@ model BalanceFinalChoice {
   @@index([questionId])
   @@index([selectedItemId])
   @@index([userId])
+}
+
+model Notice {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(30)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  isVisible Boolean  @default(true)  // 공개/비공개 설정
+  
+  @@index([authorId])
+  @@index([createdAt])
 }

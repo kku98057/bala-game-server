@@ -15,7 +15,7 @@ import commentRouter from "./comment.routes";
 const router = express.Router();
 
 router.post("/create", authMiddleware, upload.array("image"), uploadGame);
-router.post("/participants", incrementParticipants);
+// router.post("/participants", incrementParticipants);
 router.get("/statistics/:id", getTournamentStatistics);
 
 router.post("/final-choice", recordFinalChoice); // 새로운 엔드포인트
