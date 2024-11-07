@@ -1,7 +1,9 @@
-import { Request, Response, NextFunction } from "express";
+import { UserRole } from "@prisma/client";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import { verify } from "jsonwebtoken";
+import { DecodedToken } from "../types/express";
 
-export const authMiddleware = (
+export const authMiddleware: RequestHandler = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -17,11 +19,7 @@ export const authMiddleware = (
       return;
     }
 
-    const decoded = verify(token, process.env.JWT_SECRET || "") as {
-      id: string;
-      email: string;
-      nickname: string;
-    };
+    const decoded = verify(token, process.env.JWT_SECRET || "") as DecodedToken;
 
     req.user = decoded;
     next();

@@ -6,11 +6,11 @@ export const requestLogger = (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("Request received:", {
-    method: req.method,
-    path: req.path,
-    headers: req.headers,
-  });
+  // console.log("Request received:", {
+  //   method: req.method,
+  //   path: req.path,
+  //   headers: req.headers,
+  // });
   next();
 };
 

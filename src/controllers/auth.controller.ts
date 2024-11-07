@@ -55,12 +55,14 @@ export const register = async (
         password: hashedPassword,
         nickname,
         provider: "EMAIL",
+        role: "USER",
       },
       select: {
         id: true,
         email: true,
         nickname: true,
         provider: true,
+        role: true,
         createdAt: true,
       },
     });
@@ -105,6 +107,7 @@ export const login = async (
         password: true,
         nickname: true,
         provider: true,
+        role: true,
       },
     });
 
@@ -133,6 +136,7 @@ export const login = async (
         id: user.id,
         email: user.email,
         nickname: user.nickname,
+        role: user.role,
       },
       process.env.JWT_SECRET || "your-secret-key",
       { expiresIn: "7d" }
