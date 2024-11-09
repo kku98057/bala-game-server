@@ -125,7 +125,7 @@ model TournamentGame {
 
 model TournamentItem {
   id           Int            @id @default(autoincrement())
-  name         String         @db.VarChar(20)
+  name         String         @db.VarChar(40)
   imageUrl     String         @db.VarChar(1000)
   tournamentId Int
   tournament   TournamentGame @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // 추가
