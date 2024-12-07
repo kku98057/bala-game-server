@@ -128,15 +128,43 @@ export const getBalanceGames = async (
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const sort = (req.query.sort as string) || "latest"; // 정렬 기준: latest, popular, comments
+
+    // 정렬 조건 설정
+    let orderBy: any = {};
+
+    switch (sort) {
+      case "popular":
+        // 참여자 수 기준 정렬
+        orderBy = {
+          questions: {
+            _count: "desc",
+          },
+        };
+        break;
+      case "comments":
+        // 댓글 수 기준 정렬
+        orderBy = {
+          comments: {
+            _count: "desc",
+          },
+        };
+        break;
+      case "latest":
+      default:
+        // 최신순 정렬
+        orderBy = {
+          createdAt: "desc",
+        };
+        break;
+    }
 
     // 게임 목록과 총 개수를 동시에 조회
     const [games, total] = await Promise.all([
       prisma.balanceGame.findMany({
         skip,
         take: limit,
-        orderBy: {
-          createdAt: "desc", // 최신순 정렬
-        },
+        orderBy,
         select: {
           id: true,
           title: true,
@@ -144,15 +172,15 @@ export const getBalanceGames = async (
           createdAt: true,
           _count: {
             select: {
-              questions: true, // 질문 수
-              comments: true, // 댓글 수
+              questions: true,
+              comments: true,
             },
           },
           questions: {
             select: {
               _count: {
                 select: {
-                  finalChoices: true, // 참여자 수 (각 질문별 선택 수)
+                  finalChoices: true,
                 },
               },
             },
@@ -180,11 +208,11 @@ export const getBalanceGames = async (
       message: "게임 목록 조회 성공",
       payload: {
         games: formattedGames,
-
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalItems: total,
         limit,
+        sort, // 현재 정렬 기준 반환
       },
     });
   } catch (error) {
