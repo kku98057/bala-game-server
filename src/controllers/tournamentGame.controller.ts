@@ -91,15 +91,41 @@ export const getTournamentGames = async (req: Request, res: Response) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
+    const sort = (req.query.sort as string) || "latest"; // 정렬 기준
     const skip = (page - 1) * limit;
+
+    // 정렬 조건 설정
+    let orderBy: any = {};
+
+    switch (sort) {
+      case "popular":
+        // 참여자 수 기준 정렬
+        orderBy = {
+          participantCount: "desc",
+        };
+        break;
+      case "comments":
+        // 댓글 수 기준 정렬
+        orderBy = {
+          comments: {
+            _count: "desc",
+          },
+        };
+        break;
+      case "latest":
+      default:
+        // 최신순 정렬
+        orderBy = {
+          createdAt: "desc",
+        };
+        break;
+    }
 
     const [games, total] = await Promise.all([
       prisma.tournamentGame.findMany({
         skip,
         take: limit,
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy,
         include: {
           items: {
             take: 3,
@@ -108,31 +134,43 @@ export const getTournamentGames = async (req: Request, res: Response) => {
             },
           },
           _count: {
-            select: { items: true, comments: true },
+            select: {
+              items: true,
+              comments: true,
+            },
           },
         },
       }),
       prisma.tournamentGame.count(),
     ]);
+
     // 응답 데이터에 itemsCount 추가
     const gamesWithCount = games.map((game) => ({
       ...game,
       itemsCount: game._count.items,
-      _count: undefined,
       commentsCount: game._count.comments,
+      _count: undefined,
     }));
+
     res.json({
       payload: {
         games: gamesWithCount,
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalItems: total,
-        list: limit,
+        limit,
+        sort, // 현재 정렬 기준 반환
       },
     });
   } catch (error) {
     console.error("게임 목록 조회 실패:", error);
-    res.status(500).json({ error: "게임 목록을 불러오는데 실패했습니다." });
+    res.status(500).json({
+      error: "게임 목록을 불러오는데 실패했습니다.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다.",
+    });
   }
 };
 
