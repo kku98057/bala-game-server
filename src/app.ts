@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-
+process.env.TZ = "Asia/Seoul";
 import express, { Express, Request, Response } from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors.config";
