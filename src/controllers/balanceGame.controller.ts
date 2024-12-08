@@ -128,7 +128,32 @@ export const getBalanceGames = async (
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const sort = (req.query.sort as string) || "latest"; // 정렬 기준: latest, popular, comments
+    const sort = (req.query.sort as string) || "latest"; // 정렬 기준: latest, popular, comments, weekly, monthly
+    const period = (req.query.period as string) || "all"; // 기간 필터: all, weekly, monthly
+
+    // 기간 필터 조건 설정
+    let dateFilter = {};
+    const now = new Date();
+
+    if (period === "weekly") {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      dateFilter = {
+        createdAt: {
+          gte: weekAgo,
+        },
+      };
+    } else if (period === "monthly") {
+      const monthAgo = new Date(
+        now.getFullYear(),
+        now.getMonth() - 1,
+        now.getDate()
+      );
+      dateFilter = {
+        createdAt: {
+          gte: monthAgo,
+        },
+      };
+    }
 
     // 정렬 조건 설정
     let orderBy: any = {};
@@ -150,6 +175,15 @@ export const getBalanceGames = async (
           },
         };
         break;
+      case "weekly":
+      case "monthly":
+        // 해당 기간 내 참여자 수 기준 정렬
+        orderBy = {
+          questions: {
+            _count: "desc",
+          },
+        };
+        break;
       case "latest":
       default:
         // 최신순 정렬
@@ -162,6 +196,7 @@ export const getBalanceGames = async (
     // 게임 목록과 총 개수를 동시에 조회
     const [games, total] = await Promise.all([
       prisma.balanceGame.findMany({
+        where: dateFilter,
         skip,
         take: limit,
         orderBy,
@@ -187,7 +222,9 @@ export const getBalanceGames = async (
           },
         },
       }),
-      prisma.balanceGame.count(),
+      prisma.balanceGame.count({
+        where: dateFilter,
+      }),
     ]);
 
     // 응답 데이터 가공
@@ -212,7 +249,8 @@ export const getBalanceGames = async (
         totalPages: Math.ceil(total / limit),
         totalItems: total,
         limit,
-        sort, // 현재 정렬 기준 반환
+        sort,
+        period, // 현재 적용된 기간 필터 반환
       },
     });
   } catch (error) {
@@ -538,7 +576,7 @@ export const deleteBalanceGame = async (
     });
 
     res.status(200).json({
-      message: "게임이 성공적으로 삭제되었습니다.",
+      message: "게임이 성공적으로 삭제되었��니다.",
     });
   } catch (error) {
     console.error("게임 삭제 실패:", error);
