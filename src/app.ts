@@ -12,6 +12,7 @@ import tournamentGameRoutes from "./routes/tournamentGame.routes";
 import commentRoutes from "./routes/comment.routes";
 import balanceGameRoutes from "./routes/balanceGame.routes";
 import noticeRoutes from "./routes/notice.routes";
+import rankingRoutes from "./routes/ranking.routes";
 import profileRoutes from "./routes/profile.routes";
 const app: Express = express();
 const port = process.env.PORT || 3001;
@@ -61,6 +62,7 @@ app.use("/api/tournamentGame", tournamentGameRoutes);
 app.use("/api/balanceGame", balanceGameRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/notice", noticeRoutes);
+app.use("/api/ranking", rankingRoutes);
 app.use("/api/user", profileRoutes);
 // 서버 시작
 app.listen(port, async () => {
