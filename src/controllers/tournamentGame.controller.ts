@@ -35,7 +35,7 @@ export const uploadGame = async (
       },
       include: {
         items: true,
-        user: true, // 필요한 경우 user 정보도 포함
+        user: true,
       },
     });
 
@@ -91,30 +91,59 @@ export const getTournamentGames = async (req: Request, res: Response) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
-    const sort = (req.query.sort as string) || "latest"; // 정렬 기준
+    const sort = (req.query.sort as string) || "latest";
+    const period = (req.query.period as string) || "all"; // 기간 필터 추가
     const skip = (page - 1) * limit;
+
+    // 기간 필터 조건 설정
+    let dateFilter = {};
+    const now = new Date();
+
+    if (period === "weekly") {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      dateFilter = {
+        createdAt: {
+          gte: weekAgo,
+        },
+      };
+    } else if (period === "monthly") {
+      const monthAgo = new Date(
+        now.getFullYear(),
+        now.getMonth() - 1,
+        now.getDate()
+      );
+      dateFilter = {
+        createdAt: {
+          gte: monthAgo,
+        },
+      };
+    }
 
     // 정렬 조건 설정
     let orderBy: any = {};
 
     switch (sort) {
       case "popular":
-        // 참여자 수 기준 정렬
         orderBy = {
           participantCount: "desc",
         };
         break;
       case "comments":
-        // 댓글 수 기준 정렬
         orderBy = {
           comments: {
             _count: "desc",
           },
         };
         break;
+      case "weekly":
+      case "monthly":
+        // 해당 기간 내 참여자 수 기준 정렬
+        orderBy = {
+          participantCount: "desc",
+        };
+        break;
       case "latest":
       default:
-        // 최신순 정렬
         orderBy = {
           createdAt: "desc",
         };
@@ -123,6 +152,7 @@ export const getTournamentGames = async (req: Request, res: Response) => {
 
     const [games, total] = await Promise.all([
       prisma.tournamentGame.findMany({
+        where: dateFilter, // 기간 필터 적용
         skip,
         take: limit,
         orderBy,
@@ -141,10 +171,11 @@ export const getTournamentGames = async (req: Request, res: Response) => {
           },
         },
       }),
-      prisma.tournamentGame.count(),
+      prisma.tournamentGame.count({
+        where: dateFilter, // 기간 필터 적용
+      }),
     ]);
 
-    // 응답 데이터에 itemsCount 추가
     const gamesWithCount = games.map((game) => ({
       ...game,
       itemsCount: game._count.items,
@@ -159,7 +190,8 @@ export const getTournamentGames = async (req: Request, res: Response) => {
         totalPages: Math.ceil(total / limit),
         totalItems: total,
         limit,
-        sort, // 현재 정렬 기준 반환
+        sort,
+        period, // 현재 적용된 기간 필터 반환
       },
     });
   } catch (error) {
@@ -225,7 +257,7 @@ export const getTournamentStatistics = async (
       });
       return;
     }
-    // 게임이 존재하는지 먼저 확인
+    // 게임이 존재하는지 먼�� 확인
     const game = await prisma.tournamentGame.findUnique({
       where: {
         id: gameId,
