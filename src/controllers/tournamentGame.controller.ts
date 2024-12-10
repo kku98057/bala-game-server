@@ -35,7 +35,7 @@ export const uploadGame = async (
       },
       include: {
         items: true,
-        user: true, // 필요한 경우 user 정보도 포함
+        user: true,
       },
     });
 
@@ -91,15 +91,71 @@ export const getTournamentGames = async (req: Request, res: Response) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
+    const sort = (req.query.sort as string) || "latest";
+    const period = (req.query.period as string) || "all"; // 기간 필터 추가
     const skip = (page - 1) * limit;
+
+    // 기간 필터 조건 설정
+    let dateFilter = {};
+    const now = new Date();
+
+    if (period === "weekly") {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      dateFilter = {
+        createdAt: {
+          gte: weekAgo,
+        },
+      };
+    } else if (period === "monthly") {
+      const monthAgo = new Date(
+        now.getFullYear(),
+        now.getMonth() - 1,
+        now.getDate()
+      );
+      dateFilter = {
+        createdAt: {
+          gte: monthAgo,
+        },
+      };
+    }
+
+    // 정렬 조건 설정
+    let orderBy: any = {};
+
+    switch (sort) {
+      case "popular":
+        orderBy = {
+          participantCount: "desc",
+        };
+        break;
+      case "comments":
+        orderBy = {
+          comments: {
+            _count: "desc",
+          },
+        };
+        break;
+      case "weekly":
+      case "monthly":
+        // 해당 기간 내 참여자 수 기준 정렬
+        orderBy = {
+          participantCount: "desc",
+        };
+        break;
+      case "latest":
+      default:
+        orderBy = {
+          createdAt: "desc",
+        };
+        break;
+    }
 
     const [games, total] = await Promise.all([
       prisma.tournamentGame.findMany({
+        where: dateFilter, // 기간 필터 적용
         skip,
         take: limit,
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy,
         include: {
           items: {
             take: 3,
@@ -108,31 +164,45 @@ export const getTournamentGames = async (req: Request, res: Response) => {
             },
           },
           _count: {
-            select: { items: true, comments: true },
+            select: {
+              items: true,
+              comments: true,
+            },
           },
         },
       }),
-      prisma.tournamentGame.count(),
+      prisma.tournamentGame.count({
+        where: dateFilter, // 기간 필터 적용
+      }),
     ]);
-    // 응답 데이터에 itemsCount 추가
+
     const gamesWithCount = games.map((game) => ({
       ...game,
       itemsCount: game._count.items,
-      _count: undefined,
       commentsCount: game._count.comments,
+      _count: undefined,
     }));
+
     res.json({
       payload: {
         games: gamesWithCount,
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalItems: total,
-        list: limit,
+        limit,
+        sort,
+        period, // 현재 적용된 기간 필터 반환
       },
     });
   } catch (error) {
     console.error("게임 목록 조회 실패:", error);
-    res.status(500).json({ error: "게임 목록을 불러오는데 실패했습니다." });
+    res.status(500).json({
+      error: "게임 목록을 불러오는데 실패했습니다.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다.",
+    });
   }
 };
 
@@ -187,7 +257,7 @@ export const getTournamentStatistics = async (
       });
       return;
     }
-    // 게임이 존재하는지 먼저 확인
+    // 게임이 존재하는지 먼�� 확인
     const game = await prisma.tournamentGame.findUnique({
       where: {
         id: gameId,
